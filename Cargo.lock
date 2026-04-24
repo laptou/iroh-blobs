@@ -1888,6 +1888,7 @@ dependencies = [
  "iroh-test",
  "iroh-tickets",
  "irpc",
+ "js-sys",
  "n0-error",
  "n0-future",
  "nested_enum_utils",
@@ -1912,6 +1913,9 @@ dependencies = [
  "tracing-subscriber",
  "tracing-test",
  "walkdir",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

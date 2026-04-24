@@ -13,6 +13,8 @@ pub mod mem;
 pub mod readonly_mem;
 mod test;
 pub(crate) mod util;
+#[cfg(wasm_browser)]
+pub mod indexeddb;
 
 /// Block size used by iroh, 2^4*1024 = 16KiB
 pub const IROH_BLOCK_SIZE: BlockSize = BlockSize::from_chunk_log(4);

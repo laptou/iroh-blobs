@@ -259,7 +259,8 @@ impl Blobs {
 
     pub async fn add_stream(
         &self,
-        data: impl Stream<Item = io::Result<Bytes>> + Send + Sync + 'static,
+        #[cfg(wasm_browser)] data: impl Stream<Item = io::Result<Bytes>> + 'static,
+        #[cfg(not(wasm_browser))] data: impl Stream<Item = io::Result<Bytes>> + Send + 'static,
     ) -> AddProgress<'_> {
         let inner = ImportByteStreamRequest {
             format: crate::BlobFormat::Raw,
@@ -518,7 +519,11 @@ pub struct BatchAddProgress<'a>(AddProgress<'a>);
 impl<'a> IntoFuture for BatchAddProgress<'a> {
     type Output = RequestResult<TempTag>;
 
+    #[cfg(not(wasm_browser))]
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>>;
+
+    #[cfg(wasm_browser)]
+    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + 'a>>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.temp_tag())
@@ -618,13 +623,17 @@ pub struct AddPathOptions {
 /// If you want access to the stream, you can use the [`AddProgress::stream`] method.
 pub struct AddProgress<'a> {
     blobs: &'a Blobs,
-    inner: stream::Boxed<AddProgressItem>,
+    inner: n0_future::boxed::BoxStream<AddProgressItem>,
 }
 
 impl<'a> IntoFuture for AddProgress<'a> {
     type Output = RequestResult<TagInfo>;
 
+    #[cfg(not(wasm_browser))]
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>>;
+
+    #[cfg(wasm_browser)]
+    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + 'a>>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.with_tag())
@@ -632,7 +641,11 @@ impl<'a> IntoFuture for AddProgress<'a> {
 }
 
 impl<'a> AddProgress<'a> {
-    fn new(blobs: &'a Blobs, stream: impl Stream<Item = AddProgressItem> + Send + 'static) -> Self {
+    fn new(
+        blobs: &'a Blobs,
+        #[cfg(not(wasm_browser))] stream: impl Stream<Item = AddProgressItem> + Send + 'static,
+        #[cfg(wasm_browser)] stream: impl Stream<Item = AddProgressItem> + 'static,
+    ) -> Self {
         Self {
             blobs,
             inner: Box::pin(stream),
