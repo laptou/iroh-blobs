@@ -30,7 +30,11 @@ pub mod tags;
 use crate::{api::proto::WaitIdleRequest, provider::events::ProgressError};
 pub use crate::{store::util::Tag, util::temp_tag::TempTag};
 
-pub(crate) type ApiClient = irpc::Client<proto::Request>;
+/// In-process store RPC client used to construct a [`Store`] from a custom
+/// `mpsc::Sender<Command>`-driven actor.
+pub type StoreClient = irpc::Client<proto::Request>;
+/// Type alias for [`StoreClient`].
+pub type ApiClient = StoreClient;
 
 #[allow(missing_docs)]
 #[non_exhaustive]
@@ -297,11 +301,14 @@ impl Store {
         Ok(())
     }
 
-    pub(crate) fn from_sender(client: ApiClient) -> Self {
+    /// Wraps a local [`StoreClient`] created e.g. from
+    /// `irpc::Client::local(commands)`.
+    pub fn from_sender(client: ApiClient) -> Self {
         Self { client }
     }
 
-    pub(crate) fn ref_from_sender(client: &ApiClient) -> &Self {
+    /// Returns a `Store` view of an existing [`StoreClient`].
+    pub fn ref_from_sender(client: &ApiClient) -> &Self {
         Self::ref_cast(client)
     }
 }

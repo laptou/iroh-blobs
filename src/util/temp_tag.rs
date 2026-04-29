@@ -170,7 +170,7 @@ impl TempCounters {
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct TempTags {
+pub struct TempTags {
     scopes: HashMap<Scope, Arc<TempTagScope>>,
     next_scope: u64,
 }
@@ -208,7 +208,7 @@ impl TempTags {
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct TempTagScope(Mutex<TempCounterMap>);
+pub struct TempTagScope(Mutex<TempCounterMap>);
 
 impl TempTagScope {
     pub fn list(&self) -> impl Iterator<Item = HashAndFormat> + 'static {

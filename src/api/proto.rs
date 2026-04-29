@@ -111,6 +111,8 @@ pub enum Request {
     #[rpc(rx = mpsc::Receiver<ImportByteStreamUpdate>, tx = mpsc::Sender<AddProgressItem>)]
     ImportByteStream(ImportByteStreamRequest),
     #[rpc(tx = mpsc::Sender<AddProgressItem>)]
+    BrowserImportFinalize(BrowserImportFinalizeRequest),
+    #[rpc(tx = mpsc::Sender<AddProgressItem>)]
     ImportPath(ImportPathRequest),
     #[rpc(tx = mpsc::Sender<ExportProgressItem>)]
     ExportPath(ExportPathRequest),
@@ -250,6 +252,15 @@ pub struct ExportPathRequest {
 pub struct ImportByteStreamRequest {
     pub format: BlobFormat,
     pub scope: Scope,
+}
+
+/// wasm/browser fast path: blob already staged under final hash prefix in idb; finalize metadata + temp tag only.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BrowserImportFinalizeRequest {
+    pub scope: Scope,
+    pub format: BlobFormat,
+    pub hash: Hash,
+    pub size: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -694,6 +705,16 @@ pub struct Scope(pub(crate) u64);
 
 impl Scope {
     pub const GLOBAL: Self = Self(0);
+
+    /// Create a new non-global write scope. `0` is reserved for [`Self::GLOBAL`].
+    pub fn new(value: u64) -> Self {
+        Self(value)
+    }
+
+    /// Raw scope id (`0` = global).
+    pub fn value(self) -> u64 {
+        self.0
+    }
 }
 
 impl std::fmt::Debug for Scope {

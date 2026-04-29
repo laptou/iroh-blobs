@@ -47,9 +47,10 @@ use crate::{
             BatchMsg, BatchResponse, BlobDeleteRequest, BlobStatusMsg, BlobStatusRequest, Command,
             CreateTagMsg, CreateTagRequest, CreateTempTagMsg, DeleteBlobsMsg, DeleteTagsMsg,
             DeleteTagsRequest, ExportBaoMsg, ExportBaoRequest, ExportPathMsg, ExportPathRequest,
-            ExportRangesItem, ExportRangesMsg, ExportRangesRequest, ImportBaoMsg, ImportBaoRequest,
-            ImportByteStreamMsg, ImportByteStreamUpdate, ImportBytesMsg, ImportBytesRequest,
-            ImportPathMsg, ImportPathRequest, ListBlobsMsg, ListTagsMsg, ListTagsRequest,
+            ExportRangesItem, ExportRangesMsg, ExportRangesRequest, BrowserImportFinalizeMsg,
+            ImportBaoMsg, ImportBaoRequest, ImportByteStreamMsg, ImportByteStreamUpdate,
+            ImportBytesMsg, ImportBytesRequest, ImportPathMsg, ImportPathRequest, ListBlobsMsg,
+            ListTagsMsg, ListTagsRequest,
             ObserveMsg, ObserveRequest, RenameTagMsg, RenameTagRequest, Scope, SetTagMsg,
             SetTagRequest, ShutdownMsg, SyncDbMsg, WaitIdleMsg,
         },
@@ -215,6 +216,14 @@ impl Actor {
             }
             Command::ImportByteStream(ImportByteStreamMsg { inner, tx, rx, .. }) => {
                 self.spawn(import_byte_stream(inner.scope, inner.format, rx, tx));
+            }
+            Command::BrowserImportFinalize(BrowserImportFinalizeMsg { tx, .. }) => {
+                tx.send(AddProgressItem::Error(io::Error::new(
+                    io::ErrorKind::Unsupported,
+                    "browser import finalize is wasm indexeddb-only",
+                )))
+                .await
+                .ok();
             }
             Command::ImportPath(cmd) => {
                 self.spawn(import_path(cmd));

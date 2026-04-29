@@ -38,7 +38,8 @@ use crate::{
         proto::{
             self, BlobStatus, Command, ExportBaoMsg, ExportBaoRequest, ExportPathMsg,
             ExportPathRequest, ExportRangesItem, ExportRangesMsg, ExportRangesRequest,
-            ImportBaoMsg, ImportByteStreamMsg, ImportBytesMsg, ImportPathMsg, ObserveMsg,
+            BrowserImportFinalizeMsg, ImportBaoMsg, ImportByteStreamMsg, ImportBytesMsg,
+            ImportPathMsg, ObserveMsg,
             ObserveRequest, WaitIdleMsg,
         },
         ApiClient, TempTag,
@@ -116,6 +117,11 @@ impl Actor {
             }
             Command::ImportByteStream(ImportByteStreamMsg { tx, .. }) => {
                 tx.send(unsupported("import not supported").into())
+                    .await
+                    .ok();
+            }
+            Command::BrowserImportFinalize(BrowserImportFinalizeMsg { tx, .. }) => {
+                tx.send(unsupported("browser import finalize not supported").into())
                     .await
                     .ok();
             }

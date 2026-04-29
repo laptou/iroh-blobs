@@ -47,6 +47,11 @@ n0-error = "0.1.2"
 nested_enum_utils = "0.2.3"
 serde_json = "1"
 
+# pin transitive deps of iroh to avoid annoying shit happening
+# see https://github.com/n0-computer/iroh/issues/4192
+der = "=0.8.0-rc.10"
+pkcs8 = "=0.11.0-rc.10"
+
 # non-wasm-in-browser dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
 chrono = { version = "0.4.39" }

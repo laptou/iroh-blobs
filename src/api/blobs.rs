@@ -26,7 +26,7 @@ use genawaiter::sync::Gen;
 use iroh_io::AsyncStreamWriter;
 use irpc::channel::{mpsc, oneshot};
 use n0_error::AnyError;
-use n0_future::{future, stream, Stream, StreamExt};
+use n0_future::{future, Stream, StreamExt};
 use range_collections::{range_set::RangeSetRange, RangeSet2};
 use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
@@ -46,9 +46,9 @@ pub use super::proto::{
 };
 use super::{
     proto::{
-        BatchResponse, BlobStatusRequest, ClearProtectedRequest, CreateTempTagRequest,
-        ExportBaoRequest, ExportRangesItem, ImportBaoRequest, ImportByteStreamRequest,
-        ImportBytesRequest, ImportPathRequest, ListRequest, Scope,
+        BatchResponse, BlobStatusRequest, BrowserImportFinalizeRequest, ClearProtectedRequest,
+        CreateTempTagRequest, ExportBaoRequest, ExportRangesItem, ImportBaoRequest,
+        ImportByteStreamRequest, ImportBytesRequest, ImportPathRequest, ListRequest, Scope,
     },
     remote::HashSeqChunk,
     tags::TagInfo,
@@ -296,6 +296,32 @@ impl Blobs {
                 n0_error::Ok(())
             };
             let _ = tokio::join!(send, recv);
+        });
+        AddProgress::new(self, stream)
+    }
+
+    /// finalize metadata after a wasm/browser [`BrowserImportFinalizeRequest`] staging pass (idb-only backend).
+    pub fn browser_import_finalize(&self, request: BrowserImportFinalizeRequest) -> AddProgress<'_> {
+        trace!("{request:?}");
+        let this = self.clone();
+        let stream = Gen::new(|co| async move {
+            let mut receiver = match this.client.server_streaming(request, 32).await {
+                Ok(receiver) => receiver,
+                Err(cause) => {
+                    co.yield_(AddProgressItem::Error(cause.into())).await;
+                    return;
+                }
+            };
+            loop {
+                match receiver.recv().await {
+                    Ok(Some(item)) => co.yield_(item).await,
+                    Err(cause) => {
+                        co.yield_(AddProgressItem::Error(cause.into())).await;
+                        break;
+                    }
+                    Ok(None) => break,
+                }
+            }
         });
         AddProgress::new(self, stream)
     }
