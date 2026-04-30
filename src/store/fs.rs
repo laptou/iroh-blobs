@@ -539,18 +539,6 @@ impl Actor {
                 trace!("{cmd:?}");
                 self.spawn(import_byte_stream(cmd, self.context()));
             }
-            Command::BrowserImportFinalize(cmd) => {
-                trace!("{cmd:?}");
-                let tx = cmd.tx;
-                self.spawn(async move {
-                    tx.send(AddProgressItem::Error(std::io::Error::new(
-                        std::io::ErrorKind::Unsupported,
-                        "browser import finalize not supported on fs store",
-                    )))
-                    .await
-                    .ok();
-                });
-            }
             Command::ImportPath(cmd) => {
                 trace!("{cmd:?}");
                 self.spawn(import_path(cmd, self.context()));

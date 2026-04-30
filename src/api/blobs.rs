@@ -46,8 +46,8 @@ pub use super::proto::{
 };
 use super::{
     proto::{
-        BatchResponse, BlobStatusRequest, BrowserImportFinalizeRequest, ClearProtectedRequest,
-        CreateTempTagRequest, ExportBaoRequest, ExportRangesItem, ImportBaoRequest,
+        BatchResponse, BlobStatusRequest, ClearProtectedRequest, CreateTempTagRequest,
+        ExportBaoRequest, ExportRangesItem, ImportBaoRequest,
         ImportByteStreamRequest, ImportBytesRequest, ImportPathRequest, ListRequest, Scope,
     },
     remote::HashSeqChunk,
@@ -296,32 +296,6 @@ impl Blobs {
                 n0_error::Ok(())
             };
             let _ = tokio::join!(send, recv);
-        });
-        AddProgress::new(self, stream)
-    }
-
-    /// finalize metadata after a wasm/browser [`BrowserImportFinalizeRequest`] staging pass (idb-only backend).
-    pub fn browser_import_finalize(&self, request: BrowserImportFinalizeRequest) -> AddProgress<'_> {
-        trace!("{request:?}");
-        let this = self.clone();
-        let stream = Gen::new(|co| async move {
-            let mut receiver = match this.client.server_streaming(request, 32).await {
-                Ok(receiver) => receiver,
-                Err(cause) => {
-                    co.yield_(AddProgressItem::Error(cause.into())).await;
-                    return;
-                }
-            };
-            loop {
-                match receiver.recv().await {
-                    Ok(Some(item)) => co.yield_(item).await,
-                    Err(cause) => {
-                        co.yield_(AddProgressItem::Error(cause.into())).await;
-                        break;
-                    }
-                    Ok(None) => break,
-                }
-            }
         });
         AddProgress::new(self, stream)
     }

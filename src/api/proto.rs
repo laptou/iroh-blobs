@@ -111,8 +111,6 @@ pub enum Request {
     #[rpc(rx = mpsc::Receiver<ImportByteStreamUpdate>, tx = mpsc::Sender<AddProgressItem>)]
     ImportByteStream(ImportByteStreamRequest),
     #[rpc(tx = mpsc::Sender<AddProgressItem>)]
-    BrowserImportFinalize(BrowserImportFinalizeRequest),
-    #[rpc(tx = mpsc::Sender<AddProgressItem>)]
     ImportPath(ImportPathRequest),
     #[rpc(tx = mpsc::Sender<ExportProgressItem>)]
     ExportPath(ExportPathRequest),
@@ -254,14 +252,6 @@ pub struct ImportByteStreamRequest {
     pub scope: Scope,
 }
 
-/// wasm/browser fast path: blob already staged under final hash prefix in idb; finalize metadata + temp tag only.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct BrowserImportFinalizeRequest {
-    pub scope: Scope,
-    pub format: BlobFormat,
-    pub hash: Hash,
-    pub size: u64,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ImportByteStreamUpdate {
