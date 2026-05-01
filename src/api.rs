@@ -307,6 +307,11 @@ impl Store {
         Self { client }
     }
 
+    /// Return a clone of the underlying in-process/remote client.
+    pub fn client(&self) -> ApiClient {
+        self.client.clone()
+    }
+
     /// Returns a `Store` view of an existing [`StoreClient`].
     pub fn ref_from_sender(client: &ApiClient) -> &Self {
         Self::ref_cast(client)
