@@ -323,7 +323,8 @@ pub(crate) mod outboard_with_progress {
                     if let Err(err) = progress.send(start_chunk).await {
                         return Ok(Err(err));
                     }
-                    let buf = &mut buffer[..size];
+                    // size is bounded by chunk_group_bytes() here, so the cast is safe
+                    let buf = &mut buffer[..size as usize];
                     data.read_exact(buf)?;
                     let hash = hash_subtree(start_chunk.0, buf, is_root);
                     stack.push(hash);

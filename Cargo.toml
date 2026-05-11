@@ -121,3 +121,7 @@ required-features = ["fs-store"]
 [[example]]
 name = "random_store"
 required-features = ["fs-store"]
+
+[patch.crates-io]
+# local fork: fixes BaoChunk::Leaf.size overflow on wasm32 (u64 instead of usize)
+bao-tree = { path = "../bao-tree" }
